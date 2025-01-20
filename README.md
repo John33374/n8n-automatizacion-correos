@@ -32,11 +32,11 @@ A continuación se presentan los resultados obtenidos de las diferentes etapas d
 2. **Envío de Correo a persona asignada**  
    ![Envío de Correo](docs/output_send_correo.png)
 
-3. **Extracción de Documento Adjunto**  
-   ![Documento Adjunto](docs/output_doc_adjunto.png)
-
-4. **Correo Procesado**  
+3. **Correo Procesado**  
    ![Correo Procesado](docs/output_email.png)
+
+4. **Extracción de Documento Adjunto**  
+   ![Documento Adjunto](docs/output_doc_adjunto.png)
 
 5. **Scraping de Precio Web**  
    ![Precio Obtenido](docs/output_scrapin_web_price_get.png)
