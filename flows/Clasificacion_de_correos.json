@@ -1,0 +1,534 @@
+{
+  "name": "Clasificacion de correos",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "a5c983ae-b121-465d-bbe0-cb8923ed8a54",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "rMEyJzZxWSMcZbBE",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1871036b-7e67-487f-b8e3-d5db57ca2f11",
+              "name": "text",
+              "value": "={{$json[\"bodyPreview\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "9df4925a-5937-4573-ba41-254b8ffd6599",
+              "name": "asunto",
+              "value": "={{$json[\"subject\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "812fd9ae-6597-4549-a9b1-eed5cc730cc0",
+              "name": "Remitente",
+              "value": "={{$json[\"from\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20,
+        0
+      ],
+      "id": "3a86260e-74d5-4568-ba34-c71eb8a1b0e5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-inference.huggingface.co/models/distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer  <token>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"inputs\": \"={{$json['text']}}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "3df268bb-d6a4-4af3-8d6e-3231ae02454a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50e4cd05-01f7-41b9-b579-3a50af9bb760",
+              "name": "Prioridad",
+              "value": "={{$json['filtro'] === 'NEGATIVE' ? 'alta' : 'baja'}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        620,
+        0
+      ],
+      "id": "141c46d2-7b6a-44fe-84b9-6566d9d12673",
+      "name": "Prioridad"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e4aafc3a-9575-44d0-82fa-a47e35d0a6e7",
+              "name": "filtro",
+              "value": "={{$json[0][\"score\"] > $json[1][\"score\"] ? $json[0][\"label\"].trim() : $json[1][\"label\"].trim()}}",
+              "type": "string"
+            },
+            {
+              "id": "9f1b59a1-93f2-47d7-add1-76471b72b0a7",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "856e375f-018e-4ce7-9fd9-85530eea61b5",
+      "name": "Filtro"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json[\"Prioridad\"]}}",
+                    "rightValue": "baja",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "baja"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "274a4987-29dd-4a6f-8ccd-d8f13aedd322",
+                    "leftValue": "={{$json[\"Prioridad\"]}}",
+                    "rightValue": "alta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "alta"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        840,
+        0
+      ],
+      "id": "af6a8a3f-f2ce-4991-be58-312825831ff7",
+      "name": "Switch",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "toRecipients": "jhon33374@gmail.com",
+        "subject": "=Nuevo correo clasificado como {{$json[\"Prioridad\"]}}\n",
+        "bodyContent": "Hola, \n\nSe ha recibido un nuevo correo clasificado como ALTA prioridad.\n\nRevisa la información y toma las acciones necesarias con urgencia.\n\nSaludos,\nTu sistema automatizado\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        160
+      ],
+      "id": "0ef019aa-ab4e-4aa3-86f3-6f5e3a9bb06a",
+      "name": "Microsoft Outlook",
+      "retryOnFail": false,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "rMEyJzZxWSMcZbBE",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toRecipients": "john.tacan@correounivalle.edu.co",
+        "subject": "=Nuevo correo clasificado como {{$json[\"Prioridad\"]}}",
+        "bodyContent": "Hola, \n\nSe ha recibido un nuevo correo clasificado como BAJA prioridad.\n\nRevisa la información y toma las acciones necesarias.\n\nSaludos,\nTu sistema automatizado\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -60
+      ],
+      "id": "9dcaeb19-e200-4ddb-b3d9-70cdb87e8de8",
+      "name": "Microsoft Outlook1",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "rMEyJzZxWSMcZbBE",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        340
+      ],
+      "id": "250f94d1-b11a-4c35-a7d5-d5fbb57c75d2",
+      "name": "Extract from File",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-inference.huggingface.co/models/distilbert/distilbert-base-uncased-distilled-squad",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer  <token>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"context\": \"web=https://acortar.link/WLq68u\",\n  \"question\": \"give me the web complete\"\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        340
+      ],
+      "id": "4ed3abc9-e13c-4410-9f19-d67f6021c3ef",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1871036b-7e67-487f-b8e3-d5db57ca2f11",
+              "name": "text",
+              "value": "={{$json[\"text\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        340
+      ],
+      "id": "48f27c38-5b83-49a6-a76d-602c0af0bbaf",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "https://acortar.link/WLq68u",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        340
+      ],
+      "id": "6bd12bd1-9461-4608-9fd6-b57095f4f9e3",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "cssSelector": ".price"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        340
+      ],
+      "id": "292d1f77-d8aa-4ae2-9ea1-739eddcec75e",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c247941-5374-4050-8497-63ad70e89a90",
+              "name": "fullurl",
+              "value": "https://acortar.link/WLq68ur",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        340
+      ],
+      "id": "1dc60556-b144-46d7-9605-dd7c59c67d61",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Filtro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prioridad": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro": {
+      "main": [
+        [
+          {
+            "node": "Prioridad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Outlook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Microsoft Outlook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5cf53ad3-20e6-4e8f-a230-78de49a8cc80",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4a444303badf7ebf22cea6d4f93b6056b2894500f8341c4e12c2a0eece7fd61e"
+  },
+  "id": "GLC5ureGY2MxhJcX",
+  "tags": []
+}
