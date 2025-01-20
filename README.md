@@ -16,7 +16,6 @@ El flujo de `n8n` ejecuta las siguientes tareas:
 - `n8n`
 - `Microsoft Outlook API`
 - `Hugging Face API`
-- `Node.js`
 - `HTTP Request`
 - `Web Scraping`
 
