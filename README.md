@@ -1,4 +1,4 @@
-# 📧 Automatización de Correos con n8n
+# 📧 Automatización de Correos prueba AIRIS soluciones usando n8n
 
 Este proyecto automatiza la clasificación de correos electrónicos, extracción de adjuntos y scraping de datos web utilizando `n8n`.
 
