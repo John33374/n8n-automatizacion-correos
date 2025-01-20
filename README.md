@@ -21,7 +21,7 @@ El flujo de `n8n` ejecuta las siguientes tareas:
 - `Web Scraping`
 
 ## 📷 Diagrama de Arquitectura
-![Diagrama](docs/diagrama.png)
+![Diagrama](docs/workflow.png)
 
 ## 📄 Instalación y Uso
 1. Clonar este repositorio:
